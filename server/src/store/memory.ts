@@ -1,0 +1,41 @@
+import { randomUUID } from 'node:crypto';
+import { seedAttempts } from './seed.js';
+import type { Attempt, AttemptSummary, NewAttempt, Store } from './types.js';
+
+const summarize = ({ userId: _u, code: _c, analysis: _a, ...rest }: Attempt): AttemptSummary => rest;
+
+/** Used for the demo account and whenever Supabase is not configured. Lives and dies with the process. */
+export class MemoryStore implements Store {
+  private data = new Map<string, Attempt[]>();
+
+  constructor(private seedFor: (userId: string) => Attempt[] = () => []) {}
+
+  private rows(userId: string): Attempt[] {
+    let rows = this.data.get(userId);
+    if (!rows) {
+      rows = this.seedFor(userId);
+      this.data.set(userId, rows);
+    }
+    return rows;
+  }
+
+  async add(a: NewAttempt): Promise<Attempt> {
+    const attempt: Attempt = { ...a, id: randomUUID(), createdAt: a.createdAt ?? new Date().toISOString() };
+    this.rows(a.userId).push(attempt);
+    return attempt;
+  }
+
+  async list(userId: string): Promise<AttemptSummary[]> {
+    return this.rows(userId).map(summarize);
+  }
+
+  async get(userId: string, id: string): Promise<Attempt | null> {
+    return this.rows(userId).find((a) => a.id === id) ?? null;
+  }
+
+  async reset(userId: string): Promise<void> {
+    this.data.set(userId, this.seedFor(userId));
+  }
+}
+
+export const demoSeed = (userId: string) => seedAttempts(userId);
