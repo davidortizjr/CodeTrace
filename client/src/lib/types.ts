@@ -1,4 +1,6 @@
-export type TopicId = 'loops' | 'arrays' | 'strings' | 'logic' | 'objects' | 'recursion';
+export type TopicId = string;
+export type Lang = 'js' | 'ts';
+export type ProblemMode = 'run' | 'types';
 
 export interface User {
   id: string;
@@ -11,6 +13,8 @@ export interface Topic {
   id: TopicId;
   name: string;
   blurb: string;
+  group: 'course' | 'problem-solving';
+  lang: Lang;
 }
 
 export interface ProblemListItem {
@@ -19,6 +23,9 @@ export interface ProblemListItem {
   title: string;
   difficulty: 1 | 2 | 3;
   concept: string;
+  lang: Lang;
+  mode: ProblemMode;
+  lessonId: string | null;
   solved: boolean;
   tried: boolean;
 }
@@ -26,6 +33,11 @@ export interface ProblemListItem {
 export interface Problem {
   id: string;
   topic: TopicId;
+  lang: Lang;
+  mode: ProblemMode;
+  lessonId: string | null;
+  lessonTitle: string | null;
+  checkLabels: string[];
   topicName: string;
   title: string;
   difficulty: 1 | 2 | 3;
@@ -79,7 +91,16 @@ export interface TraceRow {
   flag?: boolean;
 }
 
+export interface TypeError {
+  line: number;
+  col: number;
+  code: number;
+  message: string;
+}
+
 export interface Analysis {
+  kind?: 'run' | 'types';
+  typeErrors?: TypeError[];
   verdict: 'correct' | 'incorrect' | 'error';
   passed: number;
   total: number;
@@ -151,3 +172,124 @@ export interface Attempt {
 }
 
 export type Level = 'quick' | 'standard' | 'deep';
+
+// ── Course ──────────────────────────────────────────────────────────────
+
+export interface Best {
+  score: number;
+  total: number;
+}
+
+export type LessonStatus = 'new' | 'started' | 'done';
+
+export interface CourseLesson {
+  id: string;
+  title: string;
+  summary: string;
+  minutes: number;
+  checks: Best | null;
+  exercises: { solved: number; total: number };
+  status: LessonStatus;
+}
+
+export interface CourseUnit {
+  id: string;
+  title: string;
+  blurb: string;
+  lessons: CourseLesson[];
+  lessonsDone: number;
+  exam: { questions: number; best: Best | null; passed: boolean };
+}
+
+export interface CourseTrack {
+  id: Lang;
+  title: string;
+  blurb: string;
+  units: CourseUnit[];
+  lessonsDone: number;
+  lessonsTotal: number;
+  final: { questions: number; best: Best | null; passed: boolean; ready: boolean };
+}
+
+export interface CourseResponse {
+  tracks: CourseTrack[];
+  next: { lessonId: string; title: string } | null;
+  passMark: number;
+}
+
+export interface LessonExample {
+  id: string;
+  lang: 'js' | 'ts' | 'json' | 'bash' | 'text';
+  code: string;
+  caption?: string;
+  file?: string;
+  run?: boolean;
+  output?: string[];
+  runtimeError?: string;
+  errors?: { code: number; line: number }[];
+  diagnostics?: { line: number; code: number; message: string }[];
+}
+
+export interface LessonSection {
+  heading: string;
+  body: string[];
+  examples?: LessonExample[];
+  notes?: { kind: 'tip' | 'watch-out' | 'in-js' | 'in-ts'; text: string }[];
+}
+
+export interface LessonResponse {
+  id: string;
+  unitId: string;
+  unitTitle: string;
+  track: Lang;
+  title: string;
+  summary: string;
+  minutes: number;
+  objectives: string[];
+  sections: LessonSection[];
+  recap: string[];
+  checkCount: number;
+  exercises: { id: string; title: string; difficulty: 1 | 2 | 3; lang: Lang; mode: ProblemMode; concept: string; solved: boolean; tried: boolean }[];
+  progress: { checks: Best | null; exercises: { solved: number; total: number }; status: LessonStatus };
+  prev: { id: string; title: string } | null;
+  next: { id: string; title: string } | null;
+  examId: string;
+}
+
+export interface RunResponse {
+  output: string[];
+  outputCut: boolean;
+  error: { name: string; message: string; line?: number } | null;
+  syntaxError: { message: string; line?: number } | null;
+  diagnostics: { line: number; col: number; code: number; message: string }[];
+  internal: boolean;
+}
+
+export interface QuizQuestion {
+  id: string;
+  kind: 'mcq' | 'short';
+  prompt: string;
+  code?: { lang: 'js' | 'ts'; text: string };
+  options?: { id: number; text: string }[];
+  placeholder?: string;
+}
+
+export interface QuizResponse {
+  scope: string;
+  title: string;
+  exam: boolean;
+  passMark: number;
+  items: QuizQuestion[];
+}
+
+export interface QuizResult {
+  scope: string;
+  score: number;
+  total: number;
+  percent: number;
+  passed: boolean | null;
+  passMark: number;
+  previousBest: Best | null;
+  items: { id: string; correct: boolean; given: string | null; answerText: string; explanation: string; review?: string }[];
+  review: { id: string; title: string }[];
+}

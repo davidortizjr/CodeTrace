@@ -1,4 +1,4 @@
-import { Bug, Gauge, LayoutDashboard, ListChecks, LogOut, MessageCircle, Moon, RotateCcw, Sun, Timer } from 'lucide-react';
+import { Bug, Gauge, GraduationCap, Hammer, LayoutDashboard, ListChecks, LogOut, MessageCircle, Moon, RotateCcw, Sun, Timer, BookOpen } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
@@ -7,12 +7,15 @@ import { cn } from '../lib/format';
 import { Logo } from './ui';
 
 const NAV = [
-  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/app/practice', label: 'Practice', icon: ListChecks },
-  { to: '/app/skills', label: 'Skill map', icon: Gauge },
-  { to: '/app/mistakes', label: 'Mistakes', icon: Bug },
-  { to: '/app/drill', label: '5-minute drill', icon: Timer },
-  { to: '/app/coach', label: 'Coach', icon: MessageCircle },
+  { to: '/app', label: 'Dashboard', short: 'Home', icon: LayoutDashboard, end: true },
+  { to: '/app/course', label: 'Course', short: 'Course', icon: BookOpen },
+  { to: '/app/practice', label: 'Practice', short: 'Practice', icon: ListChecks },
+  { to: '/app/exams', label: 'Exams', short: 'Exams', icon: GraduationCap },
+  { to: '/app/skills', label: 'Skill map', short: 'Skills', icon: Gauge },
+  { to: '/app/mistakes', label: 'Mistakes', short: 'Mistakes', icon: Bug },
+  { to: '/app/drill', label: '5-minute drill', short: 'Drill', icon: Timer },
+  { to: '/app/coach', label: 'Coach', short: 'Coach', icon: MessageCircle },
+  { to: '/app/howtos', label: 'Projects', short: 'Projects', icon: Hammer },
 ];
 
 function useTheme() {
@@ -153,18 +156,18 @@ export function Shell() {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 border-t border-line bg-surface/95 backdrop-blur lg:hidden">
-        {NAV.map(({ to, label, icon: Icon, end }) => (
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-20 flex overflow-x-auto border-t border-line bg-surface/95 backdrop-blur lg:hidden">
+        {NAV.map(({ to, short, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             className={({ isActive }) =>
-              cn('flex flex-col items-center gap-0.5 px-1 py-2 text-[10.5px] font-medium', isActive ? 'text-accent' : 'text-ink-3')
+              cn('flex min-w-[68px] flex-1 flex-col items-center gap-0.5 px-1.5 py-2 text-[10.5px] font-medium', isActive ? 'text-accent' : 'text-ink-3')
             }
           >
             <Icon className="size-5" aria-hidden />
-            <span className="max-w-full truncate">{label.replace('5-minute drill', 'Drill').replace('Dashboard', 'Home').replace('Skill map', 'Skills')}</span>
+            <span className="max-w-full truncate">{short}</span>
           </NavLink>
         ))}
       </nav>

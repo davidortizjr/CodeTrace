@@ -127,11 +127,18 @@ export default function ProblemPage() {
       {/* Statement */}
       <div className="min-w-0 space-y-4 xl:sticky xl:top-8 xl:self-start">
         <div>
-          <Link to="/app/practice" className="text-sm text-ink-3 hover:text-ink">
-            ← All problems
-          </Link>
+          {problem.lessonId ? (
+            <Link to={`/app/course/${problem.lessonId}`} className="text-sm text-ink-3 hover:text-ink">
+              ← Lesson: {problem.lessonTitle}
+            </Link>
+          ) : (
+            <Link to="/app/practice" className="text-sm text-ink-3 hover:text-ink">
+              ← All problems
+            </Link>
+          )}
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Pill tone="accent">{problem.topicName}</Pill>
+            <Pill tone="neutral">{problem.lang === 'ts' ? 'TypeScript' : 'JavaScript'}</Pill>
             <Difficulty level={problem.difficulty} />
             {drillIdx >= 0 && drill && <Pill tone="warn">Drill · {drill.done.length} of {drill.ids.length} done</Pill>}
           </div>
@@ -143,28 +150,46 @@ export default function ProblemPage() {
             <span className="font-medium text-ink">The idea:</span> {problem.concept}
           </p>
         </Card>
-        <Card className="p-5">
-          <h2 className="mb-2 text-base font-bold">Examples</h2>
-          <ul className="space-y-2 text-[13px]">
-            {problem.examples.map((e, i) => (
-              <li key={i} className="rounded-lg bg-surface-2 px-3 py-2 font-mono">
-                <div className="break-words text-ink">
-                  {problem.fn}({e.argsText})
-                </div>
-                <div className="break-words text-ink-2">→ {e.expected}</div>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-xs text-ink-3">
-            Your code is checked on {`typical inputs, edge cases and a large input`}. The checker runs it in a sandbox and compares its steps with a correct run.
-          </p>
-        </Card>
+        {problem.mode === 'types' ? (
+          <Card className="p-5">
+            <h2 className="mb-2 text-base font-bold">What will be checked</h2>
+            <ul className="space-y-1.5 text-sm">
+              {problem.checkLabels.map((c) => (
+                <li key={c} className="flex gap-2 rounded-lg bg-surface-2 px-3 py-2">
+                  <span className="text-ink-3" aria-hidden>•</span>
+                  <span>{c}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-ink-3">
+              The real TypeScript compiler (strict mode) checks your types against each of these. There is nothing to run: if the compiler accepts what it should and rejects what it should, you pass.
+            </p>
+          </Card>
+        ) : (
+          <Card className="p-5">
+            <h2 className="mb-2 text-base font-bold">Examples</h2>
+            <ul className="space-y-2 text-[13px]">
+              {problem.examples.map((e, i) => (
+                <li key={i} className="rounded-lg bg-surface-2 px-3 py-2 font-mono">
+                  <div className="break-words text-ink">
+                    {problem.fn}({e.argsText})
+                  </div>
+                  <div className="break-words text-ink-2">→ {e.expected}</div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-ink-3">
+              Your code is checked on typical inputs, edge cases and a large input. The checker runs it in a sandbox and compares its steps with a correct run.
+              {problem.lang === 'ts' ? ' TypeScript is checked in strict mode first.' : ''}
+            </p>
+          </Card>
+        )}
       </div>
 
       {/* Work area */}
       <div className="min-w-0 space-y-4">
         <div className="space-y-3">
-          <Editor value={code} onChange={setCode} flagLine={flagLine} onSubmit={check} />
+          <Editor lang={problem.lang} value={code} onChange={setCode} flagLine={flagLine} onSubmit={check} />
           {note && <p className="text-sm text-ink-2">{note}</p>}
           {err && <ErrorNote>{err}</ErrorNote>}
 

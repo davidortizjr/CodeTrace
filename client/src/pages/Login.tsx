@@ -67,7 +67,7 @@ export default function Login() {
         <div>
           <h1 className="max-w-[16ch] text-[44px] font-bold leading-[1.05] sm:text-[56px]">Show me how you got there.</h1>
           <p className="mt-4 max-w-[46ch] text-lg text-ink-2">
-            Most practice sites tell you a test failed. CodeTrace runs your code step by step, finds the exact step where it left the right path, and explains why.
+            Learn JavaScript and TypeScript from the syntax up. Every lesson has examples you can run, quizzes and exams, and exercises where CodeTrace runs your code step by step, finds the exact step where it left the right path, and explains why.
           </p>
         </div>
 

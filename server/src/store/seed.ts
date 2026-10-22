@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { ERROR_TYPES, type ErrorTypeId } from '../engine/errors.js';
 import { getProblem } from '../problems/bank.js';
-import type { Attempt } from './types.js';
+import type { Attempt, QuizResult } from './types.js';
 
 /**
  * Starting data for the demo account, "Sam Reyes".
@@ -78,4 +78,29 @@ export function seedAttempts(userId: string, now = new Date()): Attempt[] {
   // sanity: every seeded error type exists in the taxonomy
   for (const a of out) if (a.errorType && !ERROR_TYPES[a.errorType]) throw new Error('bad seed');
   return out.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Quiz results for the demo account, so Course and Exams show some progress. */
+const RESULT_ROWS: [number, string, number, number][] = [
+  [20, 'lesson:js-values', 2, 3],
+  [20, 'lesson:js-values', 3, 3],
+  [19, 'lesson:js-operators', 3, 3],
+  [18, 'lesson:js-functions', 2, 3],
+  [17, 'lesson:js-strings', 3, 3],
+  [16, 'unit:js-foundations', 6, 8],
+  [14, 'lesson:js-conditionals', 3, 3],
+  [12, 'lesson:js-loops', 2, 3],
+  [11, 'lesson:js-loops', 3, 3],
+  [9, 'lesson:js-scope', 3, 3],
+  [7, 'unit:js-flow', 5, 8],
+  [4, 'lesson:js-arrays', 3, 3],
+];
+
+export function seedResults(userId: string, now = new Date()): QuizResult[] {
+  return RESULT_ROWS.map(([daysAgo, scope, score, total], i) => {
+    const when = new Date(now);
+    when.setUTCDate(when.getUTCDate() - daysAgo);
+    when.setUTCHours(7 + (i % 8), (i * 11) % 60, 0, 0);
+    return { id: randomUUID(), userId, scope, score, total, createdAt: when.toISOString() };
+  });
 }

@@ -1,0 +1,19 @@
+{
+  "name": "howto-check",
+  "private": true,
+  "type": "module",
+  "description": "Builds the Task Board from the how-to guides, step by step, and tests that every guide's code and commands really work.",
+  "scripts": {
+    "verify": "tsx verify.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "playwright-core": "^1.50.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "@types/pg": "^8.11.0"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  }
+}

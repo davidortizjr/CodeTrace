@@ -1,14 +1,28 @@
+import { COURSE_PROBLEMS } from '../course/exercises/index.js';
+import { UNITS } from '../course/index.js';
 import type { ErrorTypeId } from '../engine/errors.js';
-import type { Problem, Topic, Variant } from './types.js';
+import type { CourseTopicId, Problem, Topic, Variant } from './types.js';
 
-export const TOPICS: Topic[] = [
-  { id: 'loops', name: 'Loops & accumulators', blurb: 'Build a result one pass at a time.' },
-  { id: 'arrays', name: 'Arrays', blurb: 'Search, filter and reshape lists.' },
-  { id: 'strings', name: 'Strings', blurb: 'Walk through text and compare it.' },
-  { id: 'logic', name: 'Conditionals & logic', blurb: 'Branches, ranges and the order they run in.' },
-  { id: 'objects', name: 'Objects & maps', blurb: 'Count, group and look things up by key.' },
-  { id: 'recursion', name: 'Recursion', blurb: 'Solve a problem by solving a smaller one.' },
+/** The stand-alone JavaScript problem-solving sets. */
+const SOLVING_TOPICS: Topic[] = [
+  { id: 'loops', name: 'Loops & accumulators', blurb: 'Build a result one pass at a time.', group: 'problem-solving', lang: 'js' },
+  { id: 'arrays', name: 'Arrays', blurb: 'Search, filter and reshape lists.', group: 'problem-solving', lang: 'js' },
+  { id: 'strings', name: 'Strings', blurb: 'Walk through text and compare it.', group: 'problem-solving', lang: 'js' },
+  { id: 'logic', name: 'Conditionals & logic', blurb: 'Branches, ranges and the order they run in.', group: 'problem-solving', lang: 'js' },
+  { id: 'objects', name: 'Objects & maps', blurb: 'Count, group and look things up by key.', group: 'problem-solving', lang: 'js' },
+  { id: 'recursion', name: 'Recursion', blurb: 'Solve a problem by solving a smaller one.', group: 'problem-solving', lang: 'js' },
 ];
+
+/** One topic per course unit, so exercises roll up into the skill map. */
+const COURSE_TOPICS: Topic[] = UNITS.map((u) => ({
+  id: u.id as CourseTopicId,
+  name: u.title,
+  blurb: u.blurb,
+  group: 'course' as const,
+  lang: u.track,
+}));
+
+export const TOPICS: Topic[] = [...COURSE_TOPICS, ...SOLVING_TOPICS];
 
 function v(
   id: string,
@@ -24,7 +38,8 @@ function v(
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
 
-export const PROBLEMS: Problem[] = [
+/** The original problem-solving problems (all JavaScript). */
+export const SOLVING_PROBLEMS: Problem[] = [
   // ───────────────────────── Loops & accumulators ─────────────────────────
   {
     id: 'sum-evens',
@@ -1556,6 +1571,9 @@ export const PROBLEMS: Problem[] = [
     ],
   },
 ];
+
+/** Course exercises first (in course order), then the problem-solving sets. */
+export const PROBLEMS: Problem[] = [...COURSE_PROBLEMS, ...SOLVING_PROBLEMS];
 
 const byId = new Map(PROBLEMS.map((p) => [p.id, p]));
 

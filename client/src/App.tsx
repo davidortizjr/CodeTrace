@@ -13,6 +13,12 @@ const Skills = lazy(() => import('./pages/Skills'));
 const Mistakes = lazy(() => import('./pages/Mistakes'));
 const Drill = lazy(() => import('./pages/Drill'));
 const Coach = lazy(() => import('./pages/Coach'));
+const HowTos = lazy(() => import('./pages/HowTos'));
+const HowToGuide = lazy(() => import('./pages/HowToGuide'));
+const Course = lazy(() => import('./pages/Course'));
+const Lesson = lazy(() => import('./pages/Lesson'));
+const Quiz = lazy(() => import('./pages/Quiz'));
+const Exams = lazy(() => import('./pages/Exams'));
 
 function Protected() {
   const { user, loading } = useAuth();
@@ -30,12 +36,18 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/app" element={<Protected />}>
               <Route index element={<Dashboard />} />
+              <Route path="course" element={<Course />} />
+              <Route path="course/:id" element={<Lesson />} />
+              <Route path="quiz/:kind/:id" element={<Quiz />} />
+              <Route path="exams" element={<Exams />} />
               <Route path="practice" element={<Practice />} />
               <Route path="problem/:id" element={<ProblemPage />} />
               <Route path="skills" element={<Skills />} />
               <Route path="mistakes" element={<Mistakes />} />
               <Route path="drill" element={<Drill />} />
               <Route path="coach" element={<Coach />} />
+              <Route path="howtos" element={<HowTos />} />
+              <Route path="howtos/:slug" element={<HowToGuide />} />
             </Route>
             <Route path="*" element={<Navigate to="/app" replace />} />
           </Routes>

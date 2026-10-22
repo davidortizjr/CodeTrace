@@ -34,6 +34,7 @@ const highlight = HighlightStyle.define([
 ]);
 
 interface Props {
+  lang?: 'js' | 'ts';
   value: string;
   onChange: (v: string) => void;
   flagLine?: number | null;
@@ -41,14 +42,14 @@ interface Props {
   minHeight?: string;
 }
 
-export function Editor({ value, onChange, flagLine, onSubmit, minHeight = '280px' }: Props) {
+export function Editor({ lang = 'js', value, onChange, flagLine, onSubmit, minHeight = '280px' }: Props) {
   const viewRef = useRef<EditorView | null>(null);
   const submitRef = useRef(onSubmit);
   submitRef.current = onSubmit;
 
   const extensions = useMemo<Extension[]>(
     () => [
-      javascript(),
+      javascript({ typescript: lang === 'ts' }),
       syntaxHighlighting(highlight),
       flagField,
       EditorView.contentAttributes.of({ 'aria-label': 'Code editor. Press Control or Command plus Enter to check.' }),
@@ -63,7 +64,7 @@ export function Editor({ value, onChange, flagLine, onSubmit, minHeight = '280px
         },
       }),
     ],
-    [],
+    [lang],
   );
 
   useEffect(() => {

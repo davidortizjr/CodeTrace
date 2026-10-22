@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { analyze, getCache } from '../src/engine/analyze.js';
-import { PROBLEMS } from '../src/problems/bank.js';
+import { PROBLEMS, SOLVING_PROBLEMS } from '../src/problems/bank.js';
 
 /**
  * Every problem must be self-consistent:
@@ -10,10 +10,10 @@ import { PROBLEMS } from '../src/problems/bank.js';
  *  - every known wrong variant fails at least one test and is recognised as itself.
  */
 describe('problem bank', () => {
-  it('has unique ids and 18 problems', () => {
+  it('has unique ids across all problems and 18 problem-solving problems', () => {
     const ids = PROBLEMS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids.length).toBe(18);
+    expect(SOLVING_PROBLEMS.length).toBe(18);
   });
 
   for (const problem of PROBLEMS) {
@@ -21,7 +21,7 @@ describe('problem bank', () => {
       it('reference passes and starter does not', async () => {
         const ok = await analyze(problem, problem.reference);
         expect(ok.verdict).toBe('correct');
-        expect(ok.passed).toBe(problem.tests.length);
+        expect(ok.passed).toBe(problem.mode === 'types' ? problem.typeChecks!.length : problem.tests.length);
 
         const starter = await analyze(problem, problem.starter);
         expect(starter.verdict).not.toBe('correct');

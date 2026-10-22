@@ -5,6 +5,7 @@ import { generate, type Part } from '../ai/gemini.js';
 import { offlineCoach, offlineExplain } from '../ai/offline.js';
 import { DEMO_TOKEN, DEMO_USER, requireAuth } from '../auth.js';
 import { aiEnabled, supabaseEnabled } from '../config.js';
+import { getLesson } from '../course/index.js';
 import { analyze, getCache } from '../engine/analyze.js';
 import { ERROR_TYPES, type ErrorTypeId } from '../engine/errors.js';
 import { fmtArgs, fmtEncoded } from '../engine/display.js';
@@ -13,17 +14,12 @@ import { computeProgress } from '../engine/scoring.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { PROBLEMS, TOPICS, getProblem } from '../problems/bank.js';
 import type { Problem, PublicProblem } from '../problems/types.js';
-import { MemoryStore, demoSeed } from '../store/memory.js';
-import { SupabaseStore } from '../store/supabase.js';
-import type { Store } from '../store/types.js';
-
-const demoStore = new MemoryStore(demoSeed);
-const supabaseStore = new SupabaseStore();
-
-const storeFor = (user: { demo: boolean }): Store => (user.demo ? demoStore : supabaseStore);
+import { demoStore, storeFor } from '../store/select.js';
+import { courseRouter } from './course.js';
 
 async function toPublic(p: Problem): Promise<PublicProblem> {
   const cache = await getCache(p);
+  const lesson = p.lesson ? getLesson(p.lesson) : undefined;
   const examples = p.tests
     .map((t, i) => ({ t, i }))
     .filter(({ t }) => t.cat === 'basic')
@@ -32,6 +28,11 @@ async function toPublic(p: Problem): Promise<PublicProblem> {
   return {
     id: p.id,
     topic: p.topic,
+    lang: p.lang ?? 'js',
+    mode: p.mode ?? 'run',
+    lessonId: lesson?.id ?? null,
+    lessonTitle: lesson?.title ?? null,
+    checkLabels: (p.typeChecks ?? []).map((c) => c.label),
     topicName: TOPICS.find((t) => t.id === p.topic)!.name,
     title: p.title,
     difficulty: p.difficulty,
@@ -71,6 +72,8 @@ const transcribeBody = z.object({
 
 export const api = Router();
 
+api.use(courseRouter);
+
 api.get('/health', (_req, res) => {
   res.json({ ok: true, ai: aiEnabled(), supabase: supabaseEnabled() });
 });
@@ -96,6 +99,9 @@ api.get('/problems', requireAuth, async (req, res) => {
     problems: PROBLEMS.map((p) => ({
       id: p.id,
       topic: p.topic,
+      lang: p.lang ?? 'js',
+      mode: p.mode ?? 'run',
+      lesson: p.lesson ?? null,
       title: p.title,
       difficulty: p.difficulty,
       concept: p.concept,

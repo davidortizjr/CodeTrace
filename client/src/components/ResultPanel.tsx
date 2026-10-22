@@ -33,6 +33,9 @@ export function ResultPanel({
   const m = a.mistake;
   const d = a.divergence;
   const correct = a.verdict === 'correct';
+  const types = a.kind === 'types';
+  const noun = types ? 'checks' : 'tests';
+  const typeTrouble = !correct && a.passed === a.total && !!m && a.verdict === 'incorrect';
 
   return (
     <div className="space-y-4" aria-live="polite">
@@ -44,17 +47,23 @@ export function ResultPanel({
         <div className="min-w-0 flex-1">
           <h2 className="text-lg font-bold">
             {correct
-              ? 'All tests pass'
+              ? `All ${noun} pass`
               : a.error
                 ? (ERROR_TITLES[a.error.kind] ?? 'Something went wrong')
-                : `${a.passed} of ${a.total} tests pass`}
+                : typeTrouble
+                  ? `The ${noun} pass, but TypeScript is not satisfied`
+                  : `${a.passed} of ${a.total} ${noun} pass`}
           </h2>
           <p className="text-sm text-ink-2">
             {correct
-              ? `Your solution to "${problem.title}" does what the problem asks, on ${a.total} inputs including the edge cases.`
+              ? types
+                ? `Your types for "${problem.title}" were accepted and rejected exactly where they should be.`
+                : `Your solution to "${problem.title}" does what the problem asks, on ${a.total} inputs including the edge cases.`
               : a.error
                 ? a.error.message + (a.error.line ? ` (line ${a.error.line})` : '')
-                : "You're close. Here's the part that needs fixing."}
+                : typeTrouble
+                  ? 'Your code behaves correctly, but it does not type-check in strict mode, or it uses any.'
+                  : "You're close. Here's the part that needs fixing."}
           </p>
         </div>
         <Pill tone={correct ? 'ok' : 'neutral'}>
@@ -86,6 +95,22 @@ export function ResultPanel({
         </Card>
       )}
 
+      {a.typeErrors && a.typeErrors.length > 0 && (
+        <Card className="p-5">
+          <h3 className="text-lg font-bold">What the TypeScript compiler says</h3>
+          <ul className="mt-2 space-y-1.5 text-[13px]">
+            {a.typeErrors.slice(0, 6).map((e, i) => (
+              <li key={i} className="rounded-lg bg-surface-2 px-3 py-2 font-mono">
+                <span className="text-flag">
+                  line {e.line}:{e.col}
+                </span>{' '}
+                · TS{e.code}: {e.message}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       {/* First wrong step */}
       {d && (
         <Card className="p-5">
@@ -100,7 +125,7 @@ export function ResultPanel({
             <SeqRow label="A correct run" values={d.expectedSeq} />
             <SeqRow label="Your run" values={d.gotSeq} bad />
           </div>
-          <p className="mt-2 text-xs text-ink-3">Traced with the input {problem.traceText}.</p>
+          {problem.traceText && <p className="mt-2 text-xs text-ink-3">Traced with the input {problem.traceText}.</p>}
         </Card>
       )}
 
@@ -164,7 +189,7 @@ export function ResultPanel({
 
       {!correct && attemptId && <Explain attemptId={attemptId} problemId={problem.id} questions={m?.ask ?? []} />}
 
-      <Tests tests={a.tests} defaultOpen={!correct && a.tests.length > 0} />
+      <Tests tests={a.tests} defaultOpen={!correct && a.tests.length > 0} types={types} />
 
       {/* Next */}
       <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -290,14 +315,14 @@ function Explain({ attemptId, problemId, questions }: { attemptId: string; probl
   );
 }
 
-function Tests({ tests, defaultOpen }: { tests: AnalyzeResponse['analysis']['tests']; defaultOpen: boolean }) {
+function Tests({ tests, defaultOpen, types }: { tests: AnalyzeResponse['analysis']['tests']; defaultOpen: boolean; types: boolean }) {
   if (tests.length === 0) return null;
   const failed = tests.filter((t) => !t.pass).length;
   return (
     <details className="group rounded-xl border border-line bg-surface" open={defaultOpen}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
         <span className="font-display text-base font-bold">
-          Test results
+          {types ? 'Check results' : 'Test results'}
           <span className="ml-2 text-sm font-normal text-ink-3">{failed === 0 ? 'all passed' : `${failed} failed`}</span>
         </span>
         <ChevronDown className="size-4 text-ink-3 transition-transform group-open:rotate-180" aria-hidden />
@@ -310,13 +335,13 @@ function Tests({ tests, defaultOpen }: { tests: AnalyzeResponse['analysis']['tes
             </span>
             <div className="min-w-0 space-y-0.5">
               <div className="flex flex-wrap items-center gap-x-2">
-                <span className="font-mono text-ink">input: {t.args}</span>
-                <span className="text-xs text-ink-3">{t.cat === 'edge' ? 'edge case' : t.cat === 'large' ? 'large input' : 'typical'}</span>
+                {types ? <span className="text-ink">{t.args}</span> : <span className="font-mono text-ink">input: {t.args}</span>}
+                {!types && <span className="text-xs text-ink-3">{t.cat === 'edge' ? 'edge case' : t.cat === 'large' ? 'large input' : 'typical'}</span>}
               </div>
               {!t.pass && (
                 <>
-                  <div className="break-words font-mono text-ink-2">expected: {t.expected}</div>
-                  <div className="break-words font-mono text-flag">got: {t.got}</div>
+                  {!types && <div className="break-words font-mono text-ink-2">expected: {t.expected}</div>}
+                  <div className="break-words font-mono text-flag">{types ? t.got : `got: ${t.got}`}</div>
                   {t.note && <div className="text-flag">{t.note}</div>}
                 </>
               )}

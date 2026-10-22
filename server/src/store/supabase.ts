@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { config } from '../config.js';
-import type { Attempt, AttemptSummary, NewAttempt, Store } from './types.js';
+import type { Attempt, AttemptSummary, NewAttempt, NewQuizResult, QuizResult, Store } from './types.js';
 
 let client: SupabaseClient | null = null;
 
@@ -70,5 +70,26 @@ export class SupabaseStore implements Store {
     if (error) throw new Error(`Could not load attempt: ${error.message}`);
     if (!data) return null;
     return { ...toSummary(data), userId, code: data.code, analysis: data.analysis };
+  }
+
+  async addResult(r: NewQuizResult): Promise<QuizResult> {
+    const { data, error } = await supabaseAdmin()
+      .from('quiz_results')
+      .insert({ user_id: r.userId, scope: r.scope, score: r.score, total: r.total })
+      .select('*')
+      .single();
+    if (error) throw new Error(`Could not save quiz result: ${error.message}`);
+    return { id: data.id, userId: r.userId, scope: data.scope, score: data.score, total: data.total, createdAt: data.created_at };
+  }
+
+  async listResults(userId: string): Promise<QuizResult[]> {
+    const { data, error } = await supabaseAdmin()
+      .from('quiz_results')
+      .select('id,scope,score,total,created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(2000);
+    if (error) throw new Error(`Could not load quiz results: ${error.message}`);
+    return (data ?? []).map((r) => ({ id: r.id, userId, scope: r.scope, score: r.score, total: r.total, createdAt: r.created_at }));
   }
 }

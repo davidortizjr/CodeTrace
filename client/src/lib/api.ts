@@ -1,6 +1,11 @@
 import type {
   AnalyzeResponse,
   Attempt,
+  CourseResponse,
+  LessonResponse,
+  QuizResponse,
+  QuizResult,
+  RunResponse,
   Level,
   MistakesResponse,
   Problem,
@@ -69,5 +74,11 @@ export const api = {
     request<{ text: string; source: 'gemini' | 'engine' }>('/ai/explain', { body: { attemptId, level } }),
   coach: (body: { problemId?: string; attemptId?: string; code?: string; messages: { role: 'user' | 'assistant'; content: string }[] }) =>
     request<{ text: string; source: 'gemini' | 'engine' }>('/ai/coach', { body }),
+  course: () => request<CourseResponse>('/course'),
+  lesson: (id: string) => request<LessonResponse>(`/course/lessons/${encodeURIComponent(id)}`),
+  run: (lang: 'js' | 'ts', code: string) => request<RunResponse>('/run', { body: { lang, code } }),
+  quiz: (kind: string, id: string) => request<QuizResponse>(`/quiz/${kind}/${encodeURIComponent(id)}`),
+  submitQuiz: (kind: string, id: string, answers: Record<string, number | string | null>) =>
+    request<QuizResult>(`/quiz/${kind}/${encodeURIComponent(id)}`, { body: { answers } }),
   transcribe: (image: string, mimeType: string) => request<{ code: string }>('/ai/transcribe', { body: { image, mimeType } }),
 };

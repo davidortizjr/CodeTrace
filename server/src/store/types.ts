@@ -24,10 +24,25 @@ export interface Attempt extends AttemptSummary {
 
 export type NewAttempt = Omit<Attempt, 'id' | 'createdAt'> & { createdAt?: string };
 
+/** One submission of a lesson check, a unit exam or a final exam. scope is `lesson:<id>`, `unit:<id>` or `final:<track>`. */
+export interface QuizResult {
+  id: string;
+  userId: string;
+  scope: string;
+  score: number;
+  total: number;
+  createdAt: string;
+}
+
+export type NewQuizResult = Omit<QuizResult, 'id' | 'createdAt'> & { createdAt?: string };
+
 export interface Store {
   add(attempt: NewAttempt): Promise<Attempt>;
   /** Oldest first. */
   list(userId: string): Promise<AttemptSummary[]>;
   get(userId: string, id: string): Promise<Attempt | null>;
+  addResult(result: NewQuizResult): Promise<QuizResult>;
+  /** Oldest first. */
+  listResults(userId: string): Promise<QuizResult[]>;
   reset?(userId: string): Promise<void>;
 }

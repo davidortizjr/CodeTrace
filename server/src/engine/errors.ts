@@ -20,7 +20,16 @@ export type ErrorTypeId =
   | 'coercion'
   | 'control-flow'
   | 'base-case'
-  | 'logic';
+  | 'logic'
+  | 'ts-mismatch'
+  | 'ts-missing-prop'
+  | 'ts-null'
+  | 'ts-implicit-any'
+  | 'ts-unknown-name'
+  | 'ts-narrowing'
+  | 'ts-too-loose'
+  | 'ts-any'
+  | 'ts-other';
 
 export type ErrorCategory =
   | 'Syntax & runtime'
@@ -31,6 +40,7 @@ export type ErrorCategory =
   | 'State & mutation'
   | 'Control flow'
   | 'Types & coercion'
+  | 'Type system'
   | 'Logic';
 
 export interface ErrorTypeInfo {
@@ -209,6 +219,96 @@ export const ERROR_TYPES: Record<ErrorTypeId, ErrorTypeInfo> = {
       'After each line runs on that input, what are the values of your variables, and what should they be?',
     ],
   },
+  'ts-mismatch': {
+    label: 'Type mismatch',
+    category: 'Type system',
+    why: 'A value of one type was used where TypeScript expects another, for example a string where a number is required.',
+    fix: 'Read the two types in the message: the one you gave and the one expected. Change the value, convert it, or fix the type you declared if it was wrong.',
+    ask: [
+      'Which type does the message say was expected, and which did you provide?',
+      'Is the declared type wrong, or is the value wrong?',
+    ],
+  },
+  'ts-missing-prop': {
+    label: 'Missing or unknown property',
+    category: 'Type system',
+    why: 'The code uses a property the type does not have, or builds an object that is missing a property its type requires.',
+    fix: 'Compare the object with its type: add the missing property, remove the extra one, or fix a misspelled name.',
+    ask: [
+      'Which properties does the type list?',
+      'Which one is missing from your object, or spelled differently?',
+    ],
+  },
+  'ts-null': {
+    label: 'Possibly null or undefined',
+    category: 'Type system',
+    why: 'The value can be null or undefined at this point, and the code uses it as if it always exists.',
+    fix: 'Check for the missing case first (an if, ?. or ??) so TypeScript knows the value is there before you use it.',
+    ask: [
+      'In which situation is this value null or undefined?',
+      'What should the code do in that situation?',
+    ],
+  },
+  'ts-implicit-any': {
+    label: 'Missing type annotation',
+    category: 'Type system',
+    why: 'TypeScript could not work out a type here, so it would fall back to any, which turns checking off. Strict mode refuses.',
+    fix: 'Write the type on the parameter or variable.',
+    ask: [
+      'What kind of value does this parameter receive?',
+      'Which type describes it?',
+    ],
+  },
+  'ts-unknown-name': {
+    label: 'Name not found',
+    category: 'Type system',
+    why: 'The code uses a name (a variable, function or type) that is not defined in this scope, or is spelled differently from its declaration.',
+    fix: 'Check the spelling and capital letters against the declaration, and make sure it is declared before it is used.',
+    ask: [
+      'Where is this name declared?',
+      'Does the spelling match exactly, including capitals?',
+    ],
+  },
+  'ts-narrowing': {
+    label: 'Type not narrowed',
+    category: 'Type system',
+    why: 'The value could be several types (or unknown), and the code does something that only works for one of them without checking first.',
+    fix: 'Narrow the type before using it: typeof, instanceof, in, or a check on a shared literal property.',
+    ask: [
+      'Which types can this value be at this line?',
+      'Which check would tell them apart?',
+    ],
+  },
+  'ts-too-loose': {
+    label: 'Type accepts too much',
+    category: 'Type system',
+    why: 'The exercise expects TypeScript to reject some code, but your type lets it through. The type is wider than it should be.',
+    fix: 'Make the type more specific: a literal or union instead of string, a required property instead of an optional one, a narrower parameter type.',
+    ask: [
+      'Which line was supposed to be an error?',
+      'Which part of your type lets that value in?',
+    ],
+  },
+  'ts-any': {
+    label: 'Checker switched off',
+    category: 'Type system',
+    why: 'The code uses any, @ts-ignore or a similar escape hatch. That makes errors disappear without fixing them.',
+    fix: 'Write the real type. If you truly do not know the type yet, use unknown and narrow it.',
+    ask: [
+      'What is the real type of this value?',
+      'Could unknown plus a check do the job?',
+    ],
+  },
+  'ts-other': {
+    label: 'Type error',
+    category: 'Type system',
+    why: 'The TypeScript compiler rejected the code.',
+    fix: 'Read the compiler message for the line it points at. It names the types involved.',
+    ask: [
+      'What does the message say, in your own words?',
+      'Which types are involved on that line?',
+    ],
+  },
 };
 
 export const ERROR_CATEGORIES: ErrorCategory[] = [
@@ -220,5 +320,6 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   'State & mutation',
   'Control flow',
   'Types & coercion',
+  'Type system',
   'Logic',
 ];

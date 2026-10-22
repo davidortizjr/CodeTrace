@@ -5,18 +5,20 @@ import { BarList, ChartCard, TrendChart } from '../components/charts';
 import { Card, ErrorNote, PageHeader, Pill, Spinner } from '../components/ui';
 import { api } from '../lib/api';
 import { shortDate, timeAgo } from '../lib/format';
-import type { Progress, User } from '../lib/types';
+import type { CourseResponse, Progress, User } from '../lib/types';
 
 export default function Dashboard() {
   const nav = useNavigate();
   const [data, setData] = useState<{ user: User; progress: Progress } | null>(null);
   const [err, setErr] = useState('');
   const [next, setNext] = useState<{ id: string; title: string; reason: string } | null>(null);
+  const [course, setCourse] = useState<CourseResponse | null>(null);
 
   const load = () => {
     setErr('');
     api.progress().then(setData).catch((e) => setErr(e.message));
     api.next('weak').then(setNext).catch(() => {});
+    api.course().then(setCourse).catch(() => {});
   };
   useEffect(load, []);
 
@@ -27,8 +29,9 @@ export default function Dashboard() {
   if (p.attemptsTotal === 0) {
     return (
       <>
-        <PageHeader title={`Welcome, ${user.name.split(' ')[0]}`} sub="Solve your first problem and this page fills in with your skills, mistakes and progress." />
-        <Card className="p-6">
+        <PageHeader title={`Welcome, ${user.name.split(' ')[0]}`} sub="Learn JavaScript and TypeScript here, and practise what you learn. This page fills in with your skills, mistakes and progress." />
+        <ContinueCard course={course} />
+        <Card className="mt-4 p-6">
           <h2 className="text-lg font-bold">Start with a warm-up</h2>
           <p className="mt-1 text-ink-2">Sum of evens takes about five minutes and shows you how the step trace works.</p>
           <Link to="/app/problem/sum-evens" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-ink hover:brightness-110">
@@ -52,6 +55,10 @@ export default function Dashboard() {
             : 'Here is where you stand.'
         }
       />
+
+      <div className="mb-4">
+        <ContinueCard course={course} />
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Overall skill" value={p.overall === null ? '–' : `${p.overall}%`} note={`${p.attemptsTotal} attempts`} />
@@ -193,6 +200,32 @@ function Stat({ label, value, note, small }: { label: string; value: React.React
       <div className="text-sm text-ink-3">{label}</div>
       <div className={small ? 'mt-1 font-display text-xl font-bold' : 'mt-1 font-display text-3xl font-bold tabular-nums'}>{value}</div>
       <div className="mt-1 text-xs text-ink-3">{note}</div>
+    </Card>
+  );
+}
+
+function ContinueCard({ course }: { course: CourseResponse | null }) {
+  if (!course) return null;
+  const done = course.tracks.reduce((n, t) => n + t.lessonsDone, 0);
+  const total = course.tracks.reduce((n, t) => n + t.lessonsTotal, 0);
+  return (
+    <Card className="flex flex-wrap items-center gap-4 p-5">
+      <div className="min-w-0 flex-1">
+        <div className="text-sm text-ink-3">
+          {course.next ? (done === 0 ? 'The course' : `Course progress: ${done} of ${total} lessons`) : 'Course complete'}
+        </div>
+        <h2 className="text-lg font-bold">{course.next ? (done === 0 ? 'Start with the first lesson' : `Continue: ${course.next.title}`) : 'You finished every lesson'}</h2>
+        <div className="mt-2 h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={done} aria-valuemin={0} aria-valuemax={total} aria-label="Course progress">
+          <div className="h-full rounded-full bg-accent" style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
+        </div>
+      </div>
+      <Link
+        to={course.next ? `/app/course/${course.next.lessonId}` : '/app/exams'}
+        className="inline-flex items-center gap-2 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-ink hover:brightness-110"
+      >
+        {course.next ? (done === 0 ? 'Start lesson 1' : 'Continue') : 'Go to the exams'}
+        <ArrowRight className="size-4" aria-hidden />
+      </Link>
     </Card>
   );
 }
